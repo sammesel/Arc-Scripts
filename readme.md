@@ -1,1 +1,0 @@
-# scripts in this folder
