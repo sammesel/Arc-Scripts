@@ -117,6 +117,10 @@ param(
     [ValidateSet("Yes","No", IgnoreCase=$false)]
     [string] $EnableESU="No",
 
+    [Parameter (Mandatory= $false)]
+    [ValidateSet("True","False", IgnoreCase=$false)]
+    [bool] $SkipDownload=$False,
+
     [Parameter(Mandatory=$false)]
     [hashtable]$ExclusionTags=$null
 )
@@ -169,7 +173,7 @@ $environment = "rodrigomonteiro-gbb"
 $AzureLicenseType = $null
 $ArcLicenseType = $null
 $cleanDownloads=$False
-$SkipDownload=$True
+## $SkipDownload=$True
 # For the Azure scripts
 switch ($SQLLicenseType) {
     'LicenseOnly' { $AzureLicenseType = 'BasePrice'; break }
@@ -354,8 +358,21 @@ if($RunMode -eq "Single") {
             Write-Host "Downloading $($scriptUrls.Arc.URL) to $dest..."
             Invoke-RestMethod -Uri $scriptUrls.Arc.URL -OutFile $dest
         } else {
+            ###
             Write-Host "Skipping Download of $($scriptUrls.Arc.URL) to $dest..."
-            Write-Host "..Using existing Downloaded file"
+            $downloadFolder = Join-Path -Path $PSScriptRoot -ChildPath "PayTransitionDownloads"
+            $file1 = Join-Path -Path $downloadFolder -ChildPath "modify-arc-sql-license-type.ps1"
+            $file2 = Join-Path -Path $downloadFolder -ChildPath "modify-azure-sql-license-type.ps1"
+            Write-Host "..checking the presence of file $file1"
+            Write-Host "..checking the presence of file $file2"
+            if (-not (Test-Path $file1) -or -not (Test-Path $file2)) {
+                Write-Host "Required files are missing in the 'PayTransitionDownloads' folder:"
+                if (-not (Test-Path $file1)) { Write-Host " - $file1 not found" }
+                if (-not (Test-Path $file2)) { Write-Host " - $file2 not found" }
+                Write-Host "Aborting script execution."
+                exit 1
+            }
+            ###
         }
 
         
@@ -391,8 +408,21 @@ if($RunMode -eq "Single") {
             Write-Host "Downloading $($scriptUrls.Azure.URL) to $dest..."
             Invoke-RestMethod -Uri $scriptUrls.Azure.URL -OutFile $dest
         } else {
+            ###
             Write-Host "Skipping Download of $($scriptUrls.Arc.URL) to $dest..."
-            Write-Host "..Using existing Downloaded file"
+            $downloadFolder = Join-Path -Path $PSScriptRoot -ChildPath "PayTransitionDownloads"
+            $file1 = Join-Path -Path $downloadFolder -ChildPath "modify-arc-sql-license-type.ps1"
+            $file2 = Join-Path -Path $downloadFolder -ChildPath "modify-azure-sql-license-type.ps1"
+            Write-Host "..checking the presence of file $file1"
+            Write-Host "..checking the presence of file $file2"
+            if (-not (Test-Path $file1) -or -not (Test-Path $file2)) {
+                Write-Host "Required files are missing in the 'PayTransitionDownloads' folder:"
+                if (-not (Test-Path $file1)) { Write-Host " - $file1 not found" }
+                if (-not (Test-Path $file2)) { Write-Host " - $file2 not found" }
+                Write-Host "Aborting script execution."
+                exit 1
+            }
+            ###
         }
 
        
@@ -429,7 +459,7 @@ if($RunMode -eq "Single") {
     Invoke-RemoteScript -Url $scriptUrls.General.URL -Target $Target -RunMode $RunMode -ExclusionTags $Tags
 }
 # === Cleanup downloaded files & folder ===
-if($cleanDownloads -eq $true) {
+if($cleanDownloads -eq $true -and $SkipDownload -eq $False) {
     if (Test-Path $downloadFolder) {
         Write-Host "Cleaning up downloaded scripts in $downloadFolder..."
         try {
