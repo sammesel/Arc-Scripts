@@ -168,7 +168,8 @@ $environment = "rodrigomonteiro-gbb"
 # === Pre-compute LicenseType mappings ===
 $AzureLicenseType = $null
 $ArcLicenseType = $null
-$cleanDownloads=$false
+$cleanDownloads=$False
+$SkipDownload=$True
 # For the Azure scripts
 switch ($SQLLicenseType) {
     'LicenseOnly' { $AzureLicenseType = 'BasePrice'; break }
@@ -348,8 +349,14 @@ if($RunMode -eq "Single") {
     if ($Target -eq "Both" -or $Target -eq "Arc") {
         $fileName = Split-Path $scriptUrls.Arc.URL -Leaf
         $dest     = Join-Path $downloadFolder $fileName
-        Write-Host "Downloading $($scriptUrls.Arc.URL) to $dest..."
-        Invoke-RestMethod -Uri $scriptUrls.Arc.URL -OutFile $dest
+
+        if ($SkipDownload -eq $False) {
+            Write-Host "Downloading $($scriptUrls.Arc.URL) to $dest..."
+            Invoke-RestMethod -Uri $scriptUrls.Arc.URL -OutFile $dest
+        } else {
+            Write-Host "Skipping Download of $($scriptUrls.Arc.URL) to $dest..."
+            Write-Host "..Using existing Downloaded file"
+        }
 
         
         $wrapper +="$dest ``" 
@@ -379,8 +386,14 @@ if($RunMode -eq "Single") {
     if ($Target -eq "Both" -or $Target -eq "Azure") {
         $fileName = Split-Path $scriptUrls.Azure.URL -Leaf
         $dest     = Join-Path $downloadFolder $fileName
-        Write-Host "Downloading $($scriptUrls.Azure.URL) to $dest..."
-        Invoke-RestMethod -Uri $scriptUrls.Azure.URL -OutFile $dest
+
+        if ($SkipDownload -eq $False) {
+            Write-Host "Downloading $($scriptUrls.Azure.URL) to $dest..."
+            Invoke-RestMethod -Uri $scriptUrls.Azure.URL -OutFile $dest
+        } else {
+            Write-Host "Skipping Download of $($scriptUrls.Arc.URL) to $dest..."
+            Write-Host "..Using existing Downloaded file"
+        }
 
        
         $wrapper +="$dest ``" 
